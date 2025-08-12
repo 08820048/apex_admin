@@ -10,17 +10,19 @@
     "lint": "eslint . --fix"
   },
   "dependencies": {
-    "vue": "^3.4.0",
-    "vue-router": "^4.2.5",
-    "pinia": "^2.1.7",
-    "element-plus": "^2.4.4",
     "@element-plus/icons-vue": "^2.3.1",
-    "axios": "^1.6.2"
+    "@kangc/v-md-editor": "^2.3.18",
+    "axios": "^1.6.2",
+    "element-plus": "^2.4.4",
+    "pinia": "^2.1.7",
+    "prismjs": "^1.30.0",
+    "vue": "^3.4.0",
+    "vue-router": "^4.2.5"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^4.5.2",
-    "vite": "^5.0.8",
     "eslint": "^8.56.0",
-    "eslint-plugin-vue": "^9.19.2"
+    "eslint-plugin-vue": "^9.19.2",
+    "vite": "^5.0.8"
   }
 }
