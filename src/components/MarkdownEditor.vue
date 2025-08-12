@@ -2,41 +2,57 @@
   <div class="markdown-editor">
     <!-- 普通编辑模式 -->
     <div v-if="!focusMode" class="normal-mode">
-      <!-- 工具栏 -->
+      <!-- 顶部控制栏 -->
+      <div class="normal-header">
+        <div class="normal-header-left">
+          <span class="editor-title">Markdown编辑器</span>
+        </div>
+        <div class="normal-header-right">
+          <el-button-group class="view-controls">
+            <el-button
+              size="small"
+              @click="togglePreview"
+              :type="showPreview ? 'primary' : ''"
+              :icon="showPreview ? 'Hide' : 'View'"
+            >
+              {{ showPreview ? '隐藏预览' : '显示预览' }}
+            </el-button>
+            <el-button size="small" @click="openFullscreenPreview" :icon="FullScreen">
+              全屏预览
+            </el-button>
+            <el-button size="small" @click="enterFocusMode" type="warning" :icon="Edit">
+              专注编辑
+            </el-button>
+          </el-button-group>
+        </div>
+      </div>
+
+      <!-- 编辑工具栏 -->
       <div class="editor-toolbar">
-        <el-button-group>
-          <el-button size="small" @click="insertText('**', '**')" title="粗体">
-            <strong>B</strong>
-          </el-button>
-          <el-button size="small" @click="insertText('*', '*')" title="斜体">
-            <em>I</em>
-          </el-button>
-          <el-button size="small" @click="insertText('# ', '')" title="标题1">H1</el-button>
-          <el-button size="small" @click="insertText('## ', '')" title="标题2">H2</el-button>
-          <el-button size="small" @click="insertText('### ', '')" title="标题3">H3</el-button>
-        </el-button-group>
-        <el-button-group>
-          <el-button size="small" @click="insertText('- ', '')" title="无序列表">列表</el-button>
-          <el-button size="small" @click="insertText('1. ', '')" title="有序列表">序号</el-button>
-          <el-button size="small" @click="insertText('> ', '')" title="引用">引用</el-button>
-          <el-button size="small" @click="insertText('`', '`')" title="行内代码">代码</el-button>
-        </el-button-group>
-        <el-button-group>
-          <el-button size="small" @click="insertText('[链接文字](', ')')" title="插入链接">链接</el-button>
-          <el-button size="small" @click="insertText('![图片描述](', ')')" title="插入图片">图片</el-button>
-          <el-button size="small" @click="insertText('```\n', '\n```')" title="代码块">代码块</el-button>
-          <el-button size="small" @click="insertText('---\n', '')" title="分割线">分割线</el-button>
-        </el-button-group>
-        <div class="toolbar-right">
-          <el-button size="small" @click="togglePreview" :type="showPreview ? 'primary' : ''">
-            {{ showPreview ? '隐藏预览' : '显示预览' }}
-          </el-button>
-          <el-button size="small" @click="openFullscreenPreview" :icon="FullScreen">
-            全屏预览
-          </el-button>
-          <el-button size="small" @click="enterFocusMode" type="warning" :icon="Edit">
-            专注编辑
-          </el-button>
+        <div class="toolbar-content">
+          <el-button-group>
+            <el-button size="small" @click="insertText('**', '**')" title="粗体">
+              <strong>B</strong>
+            </el-button>
+            <el-button size="small" @click="insertText('*', '*')" title="斜体">
+              <em>I</em>
+            </el-button>
+            <el-button size="small" @click="insertText('# ', '')" title="标题1">H1</el-button>
+            <el-button size="small" @click="insertText('## ', '')" title="标题2">H2</el-button>
+            <el-button size="small" @click="insertText('### ', '')" title="标题3">H3</el-button>
+          </el-button-group>
+          <el-button-group>
+            <el-button size="small" @click="insertText('- ', '')" title="无序列表">列表</el-button>
+            <el-button size="small" @click="insertText('1. ', '')" title="有序列表">序号</el-button>
+            <el-button size="small" @click="insertText('> ', '')" title="引用">引用</el-button>
+            <el-button size="small" @click="insertText('`', '`')" title="行内代码">代码</el-button>
+          </el-button-group>
+          <el-button-group>
+            <el-button size="small" @click="insertText('[链接文字](', ')')" title="插入链接">链接</el-button>
+            <el-button size="small" @click="insertText('![图片描述](', ')')" title="插入图片">图片</el-button>
+            <el-button size="small" @click="insertText('```\n', '\n```')" title="代码块">代码块</el-button>
+            <el-button size="small" @click="insertText('---\n', '')" title="分割线">分割线</el-button>
+          </el-button-group>
         </div>
       </div>
 
@@ -372,18 +388,72 @@ const insertText = async (before, after = '') => {
   background: #fff;
 }
 
-.editor-toolbar {
-  padding: 12px;
-  border-bottom: 1px solid #e4e7ed;
-  background: #fafafa;
+/* 普通模式顶部控制栏 */
+.normal-header {
   display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  border-bottom: 1px solid #e4e7ed;
+}
+
+.normal-header-left {
+  display: flex;
   align-items: center;
 }
 
-.toolbar-right {
-  margin-left: auto;
+.editor-title {
+  font-weight: 600;
+  color: #303133;
+  font-size: 14px;
+}
+
+.normal-header-right {
+  display: flex;
+  align-items: center;
+}
+
+.view-controls {
+  background: rgba(255,255,255,0.8);
+  border-radius: 6px;
+  padding: 2px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.view-controls .el-button {
+  border: none;
+  background: transparent;
+  margin: 0 1px;
+  transition: all 0.3s ease;
+}
+
+.view-controls .el-button:hover {
+  background: rgba(64, 158, 255, 0.1);
+}
+
+.view-controls .el-button.el-button--primary {
+  background: #409eff;
+  color: white;
+}
+
+.view-controls .el-button.el-button--warning {
+  background: #e6a23c;
+  color: white;
+}
+
+/* 编辑工具栏 */
+.editor-toolbar {
+  padding: 12px 16px;
+  border-bottom: 1px solid #e4e7ed;
+  background: #fafafa;
+}
+
+.toolbar-content {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 .editor-body {
@@ -400,8 +470,29 @@ const insertText = async (before, after = '') => {
   width: 100%;
 }
 
-/* 响应式设计 */
+/* 响应式设计 - 普通模式 */
 @media (max-width: 768px) {
+  .normal-header {
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .normal-header-right {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .view-controls .el-button {
+    padding: 6px 8px;
+    font-size: 12px;
+  }
+
+  .toolbar-content {
+    justify-content: flex-start;
+    gap: 6px;
+  }
+
   .editor-body.split-view {
     flex-direction: column;
     height: auto;
@@ -417,6 +508,21 @@ const insertText = async (before, after = '') => {
   .preview-pane {
     width: 100% !important;
     height: 300px;
+  }
+}
+
+@media (max-width: 480px) {
+  .editor-title {
+    font-size: 12px;
+  }
+
+  .view-controls .el-button {
+    padding: 4px 6px;
+    font-size: 11px;
+  }
+
+  .view-controls .el-button .el-icon {
+    margin-right: 2px;
   }
 }
 
