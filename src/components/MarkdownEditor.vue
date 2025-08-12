@@ -29,6 +29,9 @@
         <el-button size="small" @click="togglePreview" :type="showPreview ? 'primary' : ''">
           {{ showPreview ? '隐藏预览' : '显示预览' }}
         </el-button>
+        <el-button size="small" @click="openFullscreenPreview" :icon="FullScreen">
+          全屏预览
+        </el-button>
       </div>
     </div>
 
@@ -55,12 +58,33 @@
         <div class="preview-container" v-html="renderedMarkdown"></div>
       </div>
     </div>
+
+    <!-- 全屏预览弹窗 -->
+    <el-dialog
+      v-model="fullscreenPreviewVisible"
+      title="全屏预览"
+      :width="'90%'"
+      :top="'5vh'"
+      :show-close="true"
+      :close-on-click-modal="true"
+      :close-on-press-escape="true"
+      class="fullscreen-preview-dialog"
+    >
+      <div class="fullscreen-preview-container" v-html="renderedMarkdown"></div>
+      <template #footer>
+        <el-button @click="fullscreenPreviewVisible = false">关闭</el-button>
+        <el-button type="primary" @click="copyMarkdown">复制Markdown</el-button>
+        <el-button type="success" @click="copyHtml">复制HTML</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, watch, nextTick } from 'vue'
 import { marked } from 'marked'
+import { FullScreen } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
 
 const props = defineProps({
   modelValue: {
@@ -78,6 +102,7 @@ const emit = defineEmits(['update:modelValue'])
 const textareaRef = ref()
 const localValue = ref(props.modelValue)
 const showPreview = ref(true) // 默认显示预览
+const fullscreenPreviewVisible = ref(false) // 全屏预览弹窗
 
 // 配置marked
 marked.setOptions({
@@ -107,6 +132,31 @@ const handleInput = () => {
 // 切换预览
 const togglePreview = () => {
   showPreview.value = !showPreview.value
+}
+
+// 打开全屏预览
+const openFullscreenPreview = () => {
+  fullscreenPreviewVisible.value = true
+}
+
+// 复制Markdown内容
+const copyMarkdown = async () => {
+  try {
+    await navigator.clipboard.writeText(localValue.value)
+    ElMessage.success('Markdown内容已复制到剪贴板')
+  } catch (error) {
+    ElMessage.error('复制失败，请手动复制')
+  }
+}
+
+// 复制HTML内容
+const copyHtml = async () => {
+  try {
+    await navigator.clipboard.writeText(renderedMarkdown.value)
+    ElMessage.success('HTML内容已复制到剪贴板')
+  } catch (error) {
+    ElMessage.error('复制失败，请手动复制')
+  }
 }
 
 // 插入文本
@@ -338,5 +388,84 @@ const insertText = async (before, after = '') => {
   border: none;
   border-top: 1px solid #eaecef;
   margin: 24px 0;
+}
+
+/* 全屏预览样式 */
+.fullscreen-preview-dialog :deep(.el-dialog) {
+  margin: 0;
+  height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.fullscreen-preview-dialog :deep(.el-dialog__header) {
+  padding: 16px 20px;
+  border-bottom: 1px solid #e4e7ed;
+}
+
+.fullscreen-preview-dialog :deep(.el-dialog__body) {
+  flex: 1;
+  padding: 0;
+  overflow: hidden;
+}
+
+.fullscreen-preview-dialog :deep(.el-dialog__footer) {
+  padding: 16px 20px;
+  border-top: 1px solid #e4e7ed;
+  background: #fafafa;
+}
+
+.fullscreen-preview-container {
+  height: 100%;
+  padding: 24px;
+  overflow-y: auto;
+  background: #fff;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+/* 全屏预览中的样式优化 */
+.fullscreen-preview-container :deep(h1) {
+  font-size: 2.2em;
+  margin-top: 0;
+  margin-bottom: 24px;
+}
+
+.fullscreen-preview-container :deep(h2) {
+  font-size: 1.8em;
+  margin-top: 32px;
+  margin-bottom: 20px;
+}
+
+.fullscreen-preview-container :deep(h3) {
+  font-size: 1.4em;
+  margin-top: 24px;
+  margin-bottom: 16px;
+}
+
+.fullscreen-preview-container :deep(p) {
+  margin-bottom: 18px;
+  line-height: 1.7;
+}
+
+.fullscreen-preview-container :deep(pre) {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.fullscreen-preview-container :deep(blockquote) {
+  margin: 20px 0;
+  padding-left: 20px;
+}
+
+.fullscreen-preview-container :deep(table) {
+  margin: 20px 0;
+  font-size: 15px;
+}
+
+.fullscreen-preview-container :deep(img) {
+  margin: 20px 0;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 </style>
