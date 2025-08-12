@@ -1,15 +1,15 @@
 <template>
   <div class="sidebar">
-    <div class="logo" :class="{ collapsed: collapsed }">
+    <div class="logo" :class="{ collapsed: props.collapsed }">
       <el-icon><Document /></el-icon>
-      <span v-show="!collapsed" class="logo-text">ApexBlog</span>
+      <span v-show="!props.collapsed" class="logo-text">ApexBlog</span>
     </div>
     
     <el-menu
       :default-active="$route.path"
       class="sidebar-menu"
       router
-      :collapse="collapsed"
+      :collapse="props.collapsed"
     >
       <el-menu-item index="/dashboard">
         <el-icon><Odometer /></el-icon>
