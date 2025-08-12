@@ -55,23 +55,10 @@
               </el-form-item>
               
               <el-form-item label="文章内容" prop="content">
-                <el-tabs v-model="activeTab" class="content-tabs">
-                  <el-tab-pane label="编辑" name="edit">
-                    <v-md-editor
-                      v-model="form.content"
-                      height="500px"
-                      placeholder="请输入文章内容，支持Markdown语法..."
-                      :disabled-menus="[]"
-                      @upload-image="handleUploadImage"
-                    />
-                  </el-tab-pane>
-                  <el-tab-pane label="预览" name="preview">
-                    <MarkdownPreview
-                      :content="form.content"
-                      height="500px"
-                    />
-                  </el-tab-pane>
-                </el-tabs>
+                <MarkdownEditor
+                  v-model="form.content"
+                  height="500px"
+                />
               </el-form-item>
             </el-card>
           </el-col>
@@ -149,7 +136,7 @@ import { ElMessage } from 'element-plus'
 import { articleApi } from '@/api/article'
 import { categoryApi } from '@/api/category'
 import { tagApi } from '@/api/tag'
-import MarkdownPreview from '@/components/MarkdownPreview.vue'
+import MarkdownEditor from '@/components/MarkdownEditor.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -159,7 +146,6 @@ const saving = ref(false)
 const publishing = ref(false)
 const categories = ref([])
 const tags = ref([])
-const activeTab = ref('edit')
 
 const isEdit = computed(() => !!route.params.id)
 
@@ -277,25 +263,7 @@ const handlePublish = async () => {
   }
 }
 
-// 处理图片上传
-const handleUploadImage = async (event, insertImage, files) => {
-  // 这里可以实现图片上传到服务器的逻辑
-  // 目前先使用本地预览
-  const file = files[0]
-  if (file) {
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      // 插入图片到编辑器
-      insertImage({
-        url: e.target.result,
-        desc: file.name,
-        width: 'auto',
-        height: 'auto'
-      })
-    }
-    reader.readAsDataURL(file)
-  }
-}
+
 
 onMounted(() => {
   loadCategories()
@@ -335,38 +303,5 @@ onMounted(() => {
 
 .article-form {
   background: transparent;
-}
-
-.content-tabs {
-  margin-top: 8px;
-}
-
-.content-tabs :deep(.el-tabs__content) {
-  padding: 0;
-}
-
-.content-tabs :deep(.el-tab-pane) {
-  border: 1px solid #e4e7ed;
-  border-radius: 6px;
-  overflow: hidden;
-}
-
-/* Markdown编辑器样式优化 */
-.content-tabs :deep(.v-md-editor) {
-  border: none;
-  border-radius: 6px;
-}
-
-.content-tabs :deep(.v-md-editor__toolbar) {
-  border-bottom: 1px solid #e4e7ed;
-  background-color: #fafafa;
-}
-
-.content-tabs :deep(.v-md-editor__editor-wrapper) {
-  background-color: #fff;
-}
-
-.content-tabs :deep(.v-md-editor__preview-wrapper) {
-  background-color: #fff;
 }
 </style>
