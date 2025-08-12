@@ -74,9 +74,6 @@
 
         <!-- 预览区域 -->
         <div v-if="showPreview" class="preview-pane">
-          <div class="preview-header">
-            <span class="preview-title">实时预览</span>
-          </div>
           <div class="preview-container" v-html="renderedMarkdown"></div>
         </div>
       </div>
@@ -538,18 +535,6 @@ const insertText = async (before, after = '') => {
   background: #fff;
 }
 
-.preview-header {
-  padding: 8px 16px;
-  background: #f8f9fa;
-  border-bottom: 1px solid #e4e7ed;
-  font-size: 12px;
-  color: #666;
-}
-
-.preview-title {
-  font-weight: 500;
-}
-
 .markdown-textarea {
   flex: 1;
   border: none;
@@ -568,9 +553,10 @@ const insertText = async (before, after = '') => {
 
 .preview-container {
   flex: 1;
-  padding: 20px;
+  padding: 16px;
   overflow-y: auto;
   background: #fff;
+  border-left: 1px solid #e4e7ed;
 }
 
 .empty-content {
