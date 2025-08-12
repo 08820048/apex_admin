@@ -68,16 +68,60 @@
 
     <!-- 专注编辑模式 -->
     <div v-else class="focus-mode">
-      <!-- 专注模式工具栏 -->
-      <div class="focus-toolbar">
-        <div class="focus-toolbar-left">
+      <!-- 专注模式顶部栏 -->
+      <div class="focus-header">
+        <div class="focus-header-left">
           <el-button size="small" @click="exitFocusMode" :icon="Back" type="info">
             返回
           </el-button>
           <span class="focus-title">专注编辑模式</span>
         </div>
 
-        <div class="focus-toolbar-center">
+        <div class="focus-header-center">
+          <!-- 视图切换按钮组 -->
+          <div class="view-switcher">
+            <el-button-group>
+              <el-button
+                size="small"
+                @click="focusViewMode = 'split'"
+                :type="focusViewMode === 'split' ? 'primary' : ''"
+                title="分栏视图"
+              >
+                <el-icon><Grid /></el-icon>
+                分栏视图
+              </el-button>
+              <el-button
+                size="small"
+                @click="focusViewMode = 'edit'"
+                :type="focusViewMode === 'edit' ? 'primary' : ''"
+                title="全屏编辑"
+              >
+                <el-icon><Edit /></el-icon>
+                专注编辑
+              </el-button>
+              <el-button
+                size="small"
+                @click="focusViewMode = 'preview'"
+                :type="focusViewMode === 'preview' ? 'primary' : ''"
+                title="全屏预览"
+              >
+                <el-icon><View /></el-icon>
+                全屏预览
+              </el-button>
+            </el-button-group>
+          </div>
+        </div>
+
+        <div class="focus-header-right">
+          <el-button size="small" @click="openFullscreenPreview" :icon="FullScreen">
+            弹窗预览
+          </el-button>
+        </div>
+      </div>
+
+      <!-- 编辑工具栏 -->
+      <div class="focus-toolbar" v-if="focusViewMode !== 'preview'">
+        <div class="focus-toolbar-content">
           <el-button-group>
             <el-button size="small" @click="insertText('**', '**')" title="粗体">
               <strong>B</strong>
@@ -99,32 +143,7 @@
             <el-button size="small" @click="insertText('[链接文字](', ')')" title="插入链接">链接</el-button>
             <el-button size="small" @click="insertText('![图片描述](', ')')" title="插入图片">图片</el-button>
             <el-button size="small" @click="insertText('```\n', '\n```')" title="代码块">代码块</el-button>
-          </el-button-group>
-        </div>
-
-        <div class="focus-toolbar-right">
-          <el-button-group>
-            <el-button
-              size="small"
-              @click="focusViewMode = 'split'"
-              :type="focusViewMode === 'split' ? 'primary' : ''"
-            >
-              分栏
-            </el-button>
-            <el-button
-              size="small"
-              @click="focusViewMode = 'edit'"
-              :type="focusViewMode === 'edit' ? 'primary' : ''"
-            >
-              编辑
-            </el-button>
-            <el-button
-              size="small"
-              @click="focusViewMode = 'preview'"
-              :type="focusViewMode === 'preview' ? 'primary' : ''"
-            >
-              预览
-            </el-button>
+            <el-button size="small" @click="insertText('---\n', '')" title="分割线">分割线</el-button>
           </el-button-group>
         </div>
       </div>
@@ -196,7 +215,7 @@
 <script setup>
 import { ref, computed, watch, nextTick } from 'vue'
 import { marked } from 'marked'
-import { FullScreen, Edit, Back } from '@element-plus/icons-vue'
+import { FullScreen, Edit, Back, Grid, View } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 
 const props = defineProps({
@@ -644,35 +663,89 @@ const insertText = async (before, after = '') => {
   flex-direction: column;
 }
 
-.focus-toolbar {
+/* 专注模式顶部栏 */
+.focus-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 20px;
+  padding: 16px 24px;
   border-bottom: 1px solid #e4e7ed;
-  background: #fafafa;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
-.focus-toolbar-left {
+.focus-header-left {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
 }
 
 .focus-title {
-  font-weight: 500;
-  color: #303133;
+  font-weight: 600;
+  font-size: 16px;
+  color: white;
 }
 
-.focus-toolbar-center {
+.focus-header-center {
+  flex: 1;
   display: flex;
-  gap: 8px;
+  justify-content: center;
 }
 
-.focus-toolbar-right {
+.view-switcher {
+  background: rgba(255,255,255,0.1);
+  border-radius: 8px;
+  padding: 4px;
+}
+
+.view-switcher .el-button-group .el-button {
+  background: transparent;
+  border: none;
+  color: white;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+.view-switcher .el-button:hover {
+  background: rgba(255,255,255,0.2);
+}
+
+.view-switcher .el-button.el-button--primary {
+  background: white;
+  color: #667eea;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.focus-header-right {
   display: flex;
   align-items: center;
+}
+
+.focus-header-right .el-button {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.3);
+  color: white;
+}
+
+.focus-header-right .el-button:hover {
+  background: rgba(255,255,255,0.2);
+}
+
+/* 编辑工具栏 */
+.focus-toolbar {
+  padding: 12px 24px;
+  border-bottom: 1px solid #e4e7ed;
+  background: #fafafa;
+}
+
+.focus-toolbar-content {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
 }
 
 .focus-editor-body {
@@ -765,20 +838,31 @@ const insertText = async (before, after = '') => {
 
 /* 响应式设计 - 专注模式 */
 @media (max-width: 768px) {
-  .focus-toolbar {
+  .focus-header {
     flex-direction: column;
     gap: 12px;
     padding: 16px;
   }
 
-  .focus-toolbar-center {
+  .focus-header-center {
+    order: 2;
+    width: 100%;
+  }
+
+  .focus-header-right {
     order: 3;
     width: 100%;
     justify-content: center;
   }
 
-  .focus-toolbar-right {
-    order: 2;
+  .view-switcher .el-button {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+
+  .focus-toolbar-content {
+    justify-content: flex-start;
+    gap: 6px;
   }
 
   .focus-editor-body.view-split {
@@ -795,6 +879,25 @@ const insertText = async (before, after = '') => {
   .focus-editor-body.view-split .focus-preview-pane {
     width: 100%;
     height: 50%;
+  }
+}
+
+@media (max-width: 480px) {
+  .focus-header {
+    padding: 12px;
+  }
+
+  .focus-title {
+    font-size: 14px;
+  }
+
+  .view-switcher .el-button {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+
+  .view-switcher .el-button .el-icon {
+    margin-right: 2px;
   }
 }
 </style>
