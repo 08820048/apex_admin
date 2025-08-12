@@ -147,6 +147,36 @@ const emit = defineEmits(['toggle'])
 .sidebar-menu.el-menu--collapse .el-sub-menu__title {
   padding: 0 !important;
   text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sidebar-menu.el-menu--collapse .el-menu-item .el-icon,
+.sidebar-menu.el-menu--collapse .el-sub-menu__title .el-icon {
+  margin-right: 0 !important;
+  font-size: 18px;
+}
+
+.sidebar-menu.el-menu--collapse .el-menu-item.is-active {
+  border-right: none;
+  background-color: #ecf5ff;
+}
+
+.sidebar-menu.el-menu--collapse .el-sub-menu__title:hover,
+.sidebar-menu.el-menu--collapse .el-menu-item:hover {
+  background-color: #f5f7fa;
+}
+
+/* 收起状态下的样式优化 */
+.sidebar-menu.el-menu--collapse {
+  width: 64px;
+}
+
+.sidebar-menu.el-menu--collapse .el-menu-item,
+.sidebar-menu.el-menu--collapse .el-sub-menu__title {
+  padding: 0 !important;
+  text-align: center;
 }
 
 .sidebar-menu.el-menu--collapse .el-menu-item.is-active {

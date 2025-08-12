@@ -85,6 +85,14 @@ onUnmounted(() => {
   width: 64px;
 }
 
+/* 确保收起状态下的菜单项居中 */
+.sidebar.collapsed .el-menu--collapse .el-menu-item,
+.sidebar.collapsed .el-menu--collapse .el-sub-menu__title {
+  width: 64px;
+  height: 56px;
+  line-height: 56px;
+}
+
 .main-content {
   flex: 1;
   display: flex;
