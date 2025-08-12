@@ -1,47 +1,60 @@
 <template>
   <div class="markdown-editor">
-    <el-tabs v-model="activeTab" class="editor-tabs">
-      <el-tab-pane label="编辑" name="edit">
-        <div class="editor-container">
-          <div class="editor-toolbar">
-            <el-button-group>
-              <el-button size="small" @click="insertText('**', '**')">
-                <strong>B</strong>
-              </el-button>
-              <el-button size="small" @click="insertText('*', '*')">
-                <em>I</em>
-              </el-button>
-              <el-button size="small" @click="insertText('# ', '')">H1</el-button>
-              <el-button size="small" @click="insertText('## ', '')">H2</el-button>
-              <el-button size="small" @click="insertText('### ', '')">H3</el-button>
-            </el-button-group>
-            <el-button-group>
-              <el-button size="small" @click="insertText('- ', '')">列表</el-button>
-              <el-button size="small" @click="insertText('1. ', '')">序号</el-button>
-              <el-button size="small" @click="insertText('> ', '')">引用</el-button>
-              <el-button size="small" @click="insertText('`', '`')">代码</el-button>
-            </el-button-group>
-            <el-button-group>
-              <el-button size="small" @click="insertText('[链接文字](', ')')">链接</el-button>
-              <el-button size="small" @click="insertText('![图片描述](', ')')">图片</el-button>
-              <el-button size="small" @click="insertText('```\n', '\n```')">代码块</el-button>
-            </el-button-group>
-          </div>
-          <el-input
-            ref="textareaRef"
-            v-model="localValue"
-            type="textarea"
-            :rows="20"
-            placeholder="请输入Markdown内容..."
-            class="markdown-textarea"
-            @input="handleInput"
-          />
+    <!-- 工具栏 -->
+    <div class="editor-toolbar">
+      <el-button-group>
+        <el-button size="small" @click="insertText('**', '**')" title="粗体">
+          <strong>B</strong>
+        </el-button>
+        <el-button size="small" @click="insertText('*', '*')" title="斜体">
+          <em>I</em>
+        </el-button>
+        <el-button size="small" @click="insertText('# ', '')" title="标题1">H1</el-button>
+        <el-button size="small" @click="insertText('## ', '')" title="标题2">H2</el-button>
+        <el-button size="small" @click="insertText('### ', '')" title="标题3">H3</el-button>
+      </el-button-group>
+      <el-button-group>
+        <el-button size="small" @click="insertText('- ', '')" title="无序列表">列表</el-button>
+        <el-button size="small" @click="insertText('1. ', '')" title="有序列表">序号</el-button>
+        <el-button size="small" @click="insertText('> ', '')" title="引用">引用</el-button>
+        <el-button size="small" @click="insertText('`', '`')" title="行内代码">代码</el-button>
+      </el-button-group>
+      <el-button-group>
+        <el-button size="small" @click="insertText('[链接文字](', ')')" title="插入链接">链接</el-button>
+        <el-button size="small" @click="insertText('![图片描述](', ')')" title="插入图片">图片</el-button>
+        <el-button size="small" @click="insertText('```\n', '\n```')" title="代码块">代码块</el-button>
+        <el-button size="small" @click="insertText('---\n', '')" title="分割线">分割线</el-button>
+      </el-button-group>
+      <div class="toolbar-right">
+        <el-button size="small" @click="togglePreview" :type="showPreview ? 'primary' : ''">
+          {{ showPreview ? '隐藏预览' : '显示预览' }}
+        </el-button>
+      </div>
+    </div>
+
+    <!-- 编辑器主体 -->
+    <div class="editor-body" :class="{ 'split-view': showPreview }">
+      <!-- 编辑区域 -->
+      <div class="editor-pane">
+        <el-input
+          ref="textareaRef"
+          v-model="localValue"
+          type="textarea"
+          placeholder="请输入Markdown内容..."
+          class="markdown-textarea"
+          @input="handleInput"
+          resize="none"
+        />
+      </div>
+
+      <!-- 预览区域 -->
+      <div v-if="showPreview" class="preview-pane">
+        <div class="preview-header">
+          <span class="preview-title">实时预览</span>
         </div>
-      </el-tab-pane>
-      <el-tab-pane label="预览" name="preview">
         <div class="preview-container" v-html="renderedMarkdown"></div>
-      </el-tab-pane>
-    </el-tabs>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -62,9 +75,9 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue'])
 
-const activeTab = ref('edit')
 const textareaRef = ref()
 const localValue = ref(props.modelValue)
+const showPreview = ref(true) // 默认显示预览
 
 // 配置marked
 marked.setOptions({
@@ -89,6 +102,11 @@ watch(() => props.modelValue, (newVal) => {
 // 处理输入
 const handleInput = () => {
   emit('update:modelValue', localValue.value)
+}
+
+// 切换预览
+const togglePreview = () => {
+  showPreview.value = !showPreview.value
 }
 
 // 插入文本
@@ -120,13 +138,6 @@ const insertText = async (before, after = '') => {
   border: 1px solid #e4e7ed;
   border-radius: 6px;
   overflow: hidden;
-}
-
-.editor-tabs :deep(.el-tabs__content) {
-  padding: 0;
-}
-
-.editor-container {
   background: #fff;
 }
 
@@ -137,9 +148,73 @@ const insertText = async (before, after = '') => {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+  align-items: center;
+}
+
+.toolbar-right {
+  margin-left: auto;
+}
+
+.editor-body {
+  display: flex;
+  height: 500px;
+}
+
+.editor-body.split-view .editor-pane {
+  width: 50%;
+  border-right: 1px solid #e4e7ed;
+}
+
+.editor-body:not(.split-view) .editor-pane {
+  width: 100%;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .editor-body.split-view {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .editor-body.split-view .editor-pane {
+    width: 100%;
+    height: 300px;
+    border-right: none;
+    border-bottom: 1px solid #e4e7ed;
+  }
+
+  .preview-pane {
+    width: 100% !important;
+    height: 300px;
+  }
+}
+
+.editor-pane {
+  display: flex;
+  flex-direction: column;
+}
+
+.preview-pane {
+  width: 50%;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+}
+
+.preview-header {
+  padding: 8px 16px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e4e7ed;
+  font-size: 12px;
+  color: #666;
+}
+
+.preview-title {
+  font-weight: 500;
 }
 
 .markdown-textarea {
+  flex: 1;
   border: none;
 }
 
@@ -150,13 +225,15 @@ const insertText = async (before, after = '') => {
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
   font-size: 14px;
   line-height: 1.6;
+  height: 100% !important;
+  min-height: auto !important;
 }
 
 .preview-container {
+  flex: 1;
   padding: 20px;
-  min-height: 400px;
-  background: #fff;
   overflow-y: auto;
+  background: #fff;
 }
 
 .empty-content {
