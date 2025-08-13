@@ -68,22 +68,6 @@
             {{ row.category?.name || '-' }}
           </template>
         </el-table-column>
-        <el-table-column prop="tags" label="标签" width="200">
-          <template #default="{ row }">
-            <div class="tags-container">
-              <el-tag
-                v-for="tag in row.tags"
-                :key="tag.id"
-                size="small"
-                type="primary"
-                class="tag-item"
-              >
-                {{ tag.name }}
-              </el-tag>
-              <span v-if="!row.tags || row.tags.length === 0" class="no-tags">暂无标签</span>
-            </div>
-          </template>
-        </el-table-column>
         <el-table-column prop="status" label="状态" width="100">
           <template #default="{ row }">
             <el-tag :type="row.status === 'PUBLISHED' ? 'success' : 'info'">
@@ -96,56 +80,32 @@
             {{ formatDate(row.createdAt) }}
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="240" fixed="right">
+        <el-table-column label="操作" width="200" fixed="right">
           <template #default="{ row }">
-            <div class="action-buttons">
-              <el-button
-                size="small"
-                type="primary"
-                :icon="Edit"
-                @click="handleEdit(row.id)"
-                class="action-btn"
-              >
-                编辑
-              </el-button>
-              <el-button
-                v-if="row.status === 'DRAFT'"
-                size="small"
-                type="success"
-                :icon="Upload"
-                @click="handlePublish(row.id)"
-                class="action-btn"
-              >
-                发布
-              </el-button>
-              <el-button
-                v-else
-                size="small"
-                type="warning"
-                :icon="Download"
-                @click="handleUnpublish(row.id)"
-                class="action-btn"
-              >
-                下线
-              </el-button>
-              <el-popconfirm
-                title="确定要删除这篇文章吗？"
-                confirm-button-text="确定"
-                cancel-button-text="取消"
-                @confirm="handleDelete(row.id)"
-              >
-                <template #reference>
-                  <el-button
-                    size="small"
-                    type="danger"
-                    :icon="Delete"
-                    class="action-btn"
-                  >
-                    删除
-                  </el-button>
-                </template>
-              </el-popconfirm>
-            </div>
+            <el-button size="small" @click="handleEdit(row.id)">编辑</el-button>
+            <el-button
+              v-if="row.status === 'DRAFT'"
+              size="small"
+              type="success"
+              @click="handlePublish(row.id)"
+            >
+              发布
+            </el-button>
+            <el-button
+              v-else
+              size="small"
+              type="warning"
+              @click="handleUnpublish(row.id)"
+            >
+              取消发布
+            </el-button>
+            <el-button
+              size="small"
+              type="danger"
+              @click="handleDelete(row.id)"
+            >
+              删除
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -169,8 +129,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import { Edit, Upload, Download, Delete, Plus } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { articleApi } from '@/api/article'
 import { categoryApi } from '@/api/category'
 
@@ -269,12 +228,19 @@ const handleUnpublish = async (id) => {
 // 删除文章
 const handleDelete = async (id) => {
   try {
+    await ElMessageBox.confirm('确定要删除这篇文章吗？', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+    
     await articleApi.delete(id)
     ElMessage.success('删除成功')
     loadArticles()
   } catch (error) {
-    console.error('删除文章失败:', error)
-    ElMessage.error('删除失败')
+    if (error !== 'cancel') {
+      console.error('删除文章失败:', error)
+    }
   }
 }
 
@@ -342,71 +308,6 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 8px;
-}
-
-/* 标签样式 */
-.tags-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  align-items: center;
-}
-
-.tag-item {
-  margin: 0;
-  border-radius: 12px;
-  font-size: 12px;
-  padding: 2px 8px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border: none;
-  color: white;
-}
-
-.no-tags {
-  color: #999;
-  font-size: 12px;
-  font-style: italic;
-}
-
-/* 操作按钮样式 */
-.action-buttons {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  justify-content: flex-start;
-}
-
-.action-btn {
-  min-width: 60px;
-  border-radius: 6px;
-  font-weight: 500;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.action-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-}
-
-.action-btn.el-button--primary {
-  background: linear-gradient(135deg, #409eff 0%, #1890ff 100%);
-  border: none;
-}
-
-.action-btn.el-button--success {
-  background: linear-gradient(135deg, #67c23a 0%, #52c41a 100%);
-  border: none;
-}
-
-.action-btn.el-button--warning {
-  background: linear-gradient(135deg, #e6a23c 0%, #fa8c16 100%);
-  border: none;
-}
-
-.action-btn.el-button--danger {
-  background: linear-gradient(135deg, #f56c6c 0%, #ff4d4f 100%);
-  border: none;
 }
 
 .pagination {
