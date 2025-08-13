@@ -6,8 +6,11 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:prod": "vite build --mode production",
     "preview": "vite preview",
-    "lint": "eslint . --fix"
+    "lint": "eslint . --fix",
+    "deploy": "node scripts/deploy.js production",
+    "deploy:staging": "node scripts/deploy.js staging"
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.1",
@@ -23,8 +26,12 @@
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^4.5.2",
+    "archiver": "^7.0.1",
     "eslint": "^8.56.0",
     "eslint-plugin-vue": "^9.19.2",
+    "scp2": "^0.5.0",
+    "ssh2": "^1.16.0",
+    "terser": "^5.43.1",
     "vite": "^5.0.8"
   }
 }

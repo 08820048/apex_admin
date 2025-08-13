@@ -147,3 +147,14 @@ build/
 
 # Vite
 .vite/
+
+# 部署相关
+*.zip
+deploy.config.local.js
+.env.production.local
+.env.staging.local
+
+# SSH密钥
+*.pem
+*.key
+id_rsa*

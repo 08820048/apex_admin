@@ -1,9 +1,19 @@
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
 
+// 获取API基础URL
+const getBaseURL = () => {
+  // 生产环境使用环境变量中的API地址
+  if (import.meta.env.PROD) {
+    return import.meta.env.VITE_API_BASE_URL || 'http://43.138.234.29:8888/api'
+  }
+  // 开发环境使用代理
+  return '/api'
+}
+
 // 创建axios实例
 const api = axios.create({
-  baseURL: 'http://localhost:8888/api',
+  baseURL: getBaseURL(),
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json'
