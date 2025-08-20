@@ -92,16 +92,16 @@ const uploadAction = computed(() => {
 
 // 上传请求头
 const uploadHeaders = computed(() => {
-  const token = localStorage.getItem('token')
+  const token = localStorage.getItem('admin_token') || localStorage.getItem('token')
   return token ? { Authorization: `Bearer ${token}` } : {}
 })
 
 // 上传前验证
 const beforeUpload = (file) => {
-  // 检查文件类型
-  const isImage = file.type.startsWith('image/')
-  if (!isImage) {
-    ElMessage.error('只能上传图片文件！')
+  // 检查文件类型 - 根据文档支持的格式
+  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
+  if (!allowedTypes.includes(file.type)) {
+    ElMessage.error('只支持 JPG、PNG、GIF、WebP 格式的图片！')
     return false
   }
 
@@ -114,7 +114,7 @@ const beforeUpload = (file) => {
 
   // 开始上传
   uploading.value = true
-  
+
   // 使用自定义上传
   handleCustomUpload(file)
   return false // 阻止默认上传
@@ -186,8 +186,14 @@ const handlePreview = () => {
 const handleRemove = async () => {
   try {
     if (imageUrl.value) {
-      // 如果需要删除服务器上的文件，可以调用删除API
-      // await uploadApi.deleteFile(imageUrl.value)
+      // 调用删除API删除服务器上的文件
+      try {
+        await uploadApi.deleteFile(imageUrl.value)
+      } catch (error) {
+        console.warn('删除服务器文件失败:', error)
+        // 即使删除服务器文件失败，也继续清空本地引用
+      }
+
       imageUrl.value = ''
       ElMessage.success('删除成功')
     }

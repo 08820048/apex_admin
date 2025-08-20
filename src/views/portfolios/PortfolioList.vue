@@ -16,6 +16,20 @@
         style="width: 100%"
       >
         <el-table-column prop="name" label="项目名称" min-width="150" />
+        <el-table-column prop="coverImage" label="封面" width="100">
+          <template #default="{ row }">
+            <div class="cover-image">
+              <img
+                v-if="row.coverImage"
+                :src="row.coverImage"
+                alt="封面"
+                class="cover-thumbnail"
+                @error="handleImageError"
+              />
+              <span v-else class="no-cover">无封面</span>
+            </div>
+          </template>
+        </el-table-column>
         <el-table-column prop="description" label="项目描述" min-width="200">
           <template #default="{ row }">
             <div class="description">
@@ -104,9 +118,13 @@
         </el-form-item>
         
         <el-form-item label="封面图片">
-          <el-input
+          <ImageUpload
             v-model="form.coverImage"
-            placeholder="请输入封面图片URL"
+            upload-type="cover"
+            width="100%"
+            height="120px"
+            @success="handleCoverUploadSuccess"
+            @error="handleCoverUploadError"
           />
         </el-form-item>
         
@@ -149,6 +167,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { portfolioApi } from '@/api/portfolio'
+import ImageUpload from '@/components/ImageUpload.vue'
 
 const loading = ref(false)
 const portfolios = ref([])
@@ -268,6 +287,24 @@ const handleDelete = async (id) => {
   }
 }
 
+// 封面上传成功处理
+const handleCoverUploadSuccess = (data) => {
+  console.log('作品封面上传成功:', data)
+  ElMessage.success('封面上传成功')
+}
+
+// 封面上传失败处理
+const handleCoverUploadError = (error) => {
+  console.error('作品封面上传失败:', error)
+  ElMessage.error('封面上传失败')
+}
+
+// 图片加载错误处理
+const handleImageError = (event) => {
+  event.target.style.display = 'none'
+  event.target.nextElementSibling.style.display = 'block'
+}
+
 onMounted(() => {
   loadPortfolios()
 })
@@ -300,5 +337,27 @@ onMounted(() => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.cover-image {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 40px;
+}
+
+.cover-thumbnail {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid #e4e7ed;
+}
+
+.no-cover {
+  font-size: 12px;
+  color: #999;
+  text-align: center;
 }
 </style>
