@@ -5,24 +5,16 @@ export const uploadApi = {
   uploadCover(file) {
     const formData = new FormData()
     formData.append('file', file)
-    
-    return api.post('/admin/upload/cover', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
-    })
+
+    return api.post('/admin/upload/cover', formData)
   },
 
   // 上传用户头像
   uploadAvatar(file) {
     const formData = new FormData()
     formData.append('file', file)
-    
-    return api.post('/admin/upload/avatar', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
-    })
+
+    return api.post('/admin/upload/avatar', formData)
   },
 
   // 通用图片上传
@@ -30,12 +22,8 @@ export const uploadApi = {
     const formData = new FormData()
     formData.append('file', file)
     formData.append('folder', folder)
-    
-    return api.post('/admin/upload/image', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
-    })
+
+    return api.post('/admin/upload/image', formData)
   },
 
   // 删除文件
