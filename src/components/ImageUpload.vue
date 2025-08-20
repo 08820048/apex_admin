@@ -141,23 +141,32 @@ const handleCustomUpload = async (file) => {
         throw new Error('不支持的上传类型')
     }
 
-    console.log('上传响应:', response)
-
-    // 检查响应数据结构
+    // 直接使用response.data，因为axios已经解析了JSON
     const responseData = response.data
     console.log('响应数据:', responseData)
 
+    // 根据文档，响应格式应该是 { code: 200, message: "xxx", data: { url: "xxx" } }
     if (responseData.code === 200) {
       const url = responseData.data.url
       console.log('上传成功，图片URL:', url)
       imageUrl.value = url
-      ElMessage.success(responseData.message || '上传成功')
+      ElMessage.success(responseData.message)
       emit('success', responseData.data)
     } else {
       throw new Error(responseData.message || '上传失败')
     }
   } catch (error) {
-    console.error('上传失败:', error)
+    console.error('上传失败详细信息:', error)
+    console.error('错误类型:', error.constructor.name)
+    console.error('错误消息:', error.message)
+    console.error('错误堆栈:', error.stack)
+
+    if (error.response) {
+      console.error('HTTP错误响应:', error.response)
+      console.error('HTTP状态码:', error.response.status)
+      console.error('HTTP响应数据:', error.response.data)
+    }
+
     ElMessage.error(error.message || '上传失败')
     emit('error', error)
   } finally {
