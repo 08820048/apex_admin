@@ -109,7 +109,7 @@
                   v-model="form.coverImage"
                   upload-type="cover"
                   width="100%"
-                  height="160px"
+                  height="120px"
                   @success="handleCoverUploadSuccess"
                   @error="handleCoverUploadError"
                 />

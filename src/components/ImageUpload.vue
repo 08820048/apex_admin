@@ -220,6 +220,7 @@ const handleRemove = async () => {
 .image-upload {
   width: v-bind(width);
   height: v-bind(height);
+  position: relative;
 }
 
 .image-upload :deep(.el-upload) {
@@ -233,6 +234,9 @@ const handleRemove = async () => {
   border-radius: 6px;
   position: relative;
   overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .upload-area {
@@ -262,11 +266,14 @@ const handleRemove = async () => {
 }
 
 .image-preview {
-  position: relative;
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   overflow: hidden;
   border-radius: 6px;
+  background: #f5f7fa;
 }
 
 .image-preview img {
