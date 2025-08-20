@@ -113,7 +113,7 @@ const beforeUpload = (file) => {
   const isLt5M = file.size / 1024 / 1024 < 5
   if (!isLt5M) {
     ElMessage.error('图片大小不能超过 5MB！')
-    return false
+    return fal
   }
 
   // 开始上传
@@ -127,37 +127,78 @@ const beforeUpload = (file) => {
 // 自定义上传处理
 const handleCustomUpload = async (file) => {
   try {
-    console.log('开始上传文件:', file.name, '类型:', props.uploadType)
+    console.log('=== 开始上传调试 ===')
+    console.log('文件信息:', {
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      lastModified: file.lastModified
+    })
+    console.log('上传类型:', props.uploadType)
+    console.log('当前环境:', {
+      isDev: import.meta.env.DEV,
+      isProd: import.meta.env.PROD,
+      mode: import.meta.env.MODE,
+      baseUrl: import.meta.env.VITE_API_BASE_URL
+    })
+    console.log('当前域名:', window.location.hostname)
+
     let response
 
     // 根据上传类型选择对应的API
     switch (props.uploadType) {
       case 'cover':
+        console.log('调用 uploadApi.uploadCover')
         response = await uploadApi.uploadCover(file)
         break
       case 'avatar':
+        console.log('调用 uploadApi.uploadAvatar')
         response = await uploadApi.uploadAvatar(file)
         break
       case 'image':
+        console.log('调用 uploadApi.uploadImage')
         response = await uploadApi.uploadImage(file)
         break
       default:
         throw new Error('不支持的上传类型')
     }
 
-    // 由于响应拦截器已经处理了成功响应，这里response就是后端的数据
+    console.log('=== 上传成功 ===')
     console.log('响应数据:', response)
 
     // response已经是 { code: 200, message: "xxx", data: { url: "xxx" } } 格式
     const url = response.data.url
-    console.log('上传成功，图片URL:', url)
+    console.log('图片URL:', url)
     imageUrl.value = url
     ElMessage.success(response.message)
     emit('success', response.data)
   } catch (error) {
-    console.error('上传失败详细信息:', error)
-    console.error('错误类型:', error.constructor.name)
-    console.error('错误消息:', error.message)
+    console.log('=== 上传失败 ===')
+    console.error('错误详细信息:', {
+      name: error.name,
+      message: error.message,
+      stack: error.stack,
+      config: error.config,
+      request: error.request,
+      response: error.response
+    })
+
+    if (error.response) {
+      console.error('HTTP响应错误:', {
+        status: error.response.status,
+        statusText: error.response.statusText,
+        headers: error.response.headers,
+        data: error.response.data
+      })
+    }
+
+    if (error.request) {
+      console.error('请求配置:', {
+        method: error.request.method,
+        url: error.request.responseURL || error.request.url,
+        headers: error.request.getAllResponseHeaders ? error.request.getAllResponseHeaders() : 'N/A'
+      })
+    }
     console.error('错误堆栈:', error.stack)
 
     if (error.response) {

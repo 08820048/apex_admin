@@ -21,7 +21,7 @@ const getBaseURL = () => {
 // 创建axios实例
 const api = axios.create({
   baseURL: getBaseURL(),
-  timeout: 10000,
+  timeout: 60000,  // 增加到60秒，适应文件上传需求
   headers: {
     'Content-Type': 'application/json'
   }
@@ -30,14 +30,28 @@ const api = axios.create({
 // 请求拦截器 - 添加token
 api.interceptors.request.use(
   config => {
+    console.log('=== 请求拦截器 ===')
+    console.log('请求配置:', {
+      method: config.method,
+      url: config.url,
+      baseURL: config.baseURL,
+      headers: config.headers,
+      data: config.data instanceof FormData ? 'FormData' : config.data
+    })
+
     const token = localStorage.getItem('admin_token')
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
+      console.log('已添加Authorization token')
+    } else {
+      console.log('未找到admin_token')
     }
+
+    console.log('最终请求headers:', config.headers)
     return config
   },
   error => {
-    console.error('请求错误:', error)
+    console.error('请求拦截器错误:', error)
     return Promise.reject(error)
   }
 )
@@ -45,12 +59,19 @@ api.interceptors.request.use(
 // 响应拦截器 - 统一处理错误
 api.interceptors.response.use(
   response => {
+    console.log('=== 响应拦截器 ===')
+    console.log('响应状态:', response.status)
+    console.log('响应headers:', response.headers)
+    console.log('响应数据:', response.data)
+
     const { data } = response
-    
+
     // 检查业务状态码
     if (data.code === 200) {
+      console.log('业务状态码200，返回数据')
       return data
     } else {
+      console.log('业务状态码非200:', data.code, data.message)
       // 业务错误
       ElMessage.error(data.message || '请求失败')
       return Promise.reject(new Error(data.message || '请求失败'))
