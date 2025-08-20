@@ -123,8 +123,9 @@ const beforeUpload = (file) => {
 // 自定义上传处理
 const handleCustomUpload = async (file) => {
   try {
+    console.log('开始上传文件:', file.name, '类型:', props.uploadType)
     let response
-    
+
     // 根据上传类型选择对应的API
     switch (props.uploadType) {
       case 'cover':
@@ -140,13 +141,20 @@ const handleCustomUpload = async (file) => {
         throw new Error('不支持的上传类型')
     }
 
-    if (response.data.code === 200) {
-      const url = response.data.data.url
+    console.log('上传响应:', response)
+
+    // 检查响应数据结构
+    const responseData = response.data
+    console.log('响应数据:', responseData)
+
+    if (responseData.code === 200) {
+      const url = responseData.data.url
+      console.log('上传成功，图片URL:', url)
       imageUrl.value = url
-      ElMessage.success('上传成功')
-      emit('success', response.data.data)
+      ElMessage.success(responseData.message || '上传成功')
+      emit('success', responseData.data)
     } else {
-      throw new Error(response.data.message || '上传失败')
+      throw new Error(responseData.message || '上传失败')
     }
   } catch (error) {
     console.error('上传失败:', error)
