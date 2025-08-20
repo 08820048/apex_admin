@@ -3,10 +3,17 @@ import { ElMessage } from 'element-plus'
 
 // 获取API基础URL
 const getBaseURL = () => {
+  // 检查是否在同一域名下
+  if (window.location.hostname === 'admin.ilikexff.cn') {
+    // 如果前端在admin.ilikexff.cn，API在ilikexff.cn，使用完整URL
+    return 'https://ilikexff.cn/api'
+  }
+
   // 生产环境使用环境变量中的API地址
   if (import.meta.env.PROD) {
-    return import.meta.env.VITE_API_BASE_URL || 'http://43.138.234.29:8888/api'
+    return import.meta.env.VITE_API_BASE_URL || 'https://ilikexff.cn/api'
   }
+
   // 开发环境使用代理
   return '/api'
 }
