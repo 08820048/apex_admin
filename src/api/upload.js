@@ -6,11 +6,19 @@ export const uploadApi = {
     const formData = new FormData()
     formData.append('file', file)
 
-    return api.post('/admin/upload/cover', formData, {
+    // 创建新的配置，明确删除Content-Type
+    const config = {
       headers: {
-        'Content-Type': undefined  // 必须设置为undefined来覆盖axios默认的application/json
+        ...api.defaults.headers.common,
+        'Content-Type': undefined
       }
-    })
+    }
+
+    // 删除可能存在的Content-Type
+    delete config.headers['Content-Type']
+    delete config.headers['content-type']
+
+    return api.post('/admin/upload/cover', formData, config)
   },
 
 
@@ -19,11 +27,16 @@ export const uploadApi = {
     const formData = new FormData()
     formData.append('file', file)
 
-    return api.post('/admin/upload/avatar', formData, {
+    const config = {
       headers: {
-        'Content-Type': undefined
+        ...api.defaults.headers.common
       }
-    })
+    }
+
+    delete config.headers['Content-Type']
+    delete config.headers['content-type']
+
+    return api.post('/admin/upload/avatar', formData, config)
   },
 
   // 通用图片上传
@@ -32,11 +45,16 @@ export const uploadApi = {
     formData.append('file', file)
     formData.append('folder', folder)
 
-    return api.post('/admin/upload/image', formData, {
+    const config = {
       headers: {
-        'Content-Type': undefined
+        ...api.defaults.headers.common
       }
-    })
+    }
+
+    delete config.headers['Content-Type']
+    delete config.headers['content-type']
+
+    return api.post('/admin/upload/image', formData, config)
   },
 
   // 删除文件
