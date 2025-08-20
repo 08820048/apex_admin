@@ -141,20 +141,15 @@ const handleCustomUpload = async (file) => {
         throw new Error('不支持的上传类型')
     }
 
-    // 直接使用response.data，因为axios已经解析了JSON
-    const responseData = response.data
-    console.log('响应数据:', responseData)
+    // 由于响应拦截器已经处理了成功响应，这里response就是后端的数据
+    console.log('响应数据:', response)
 
-    // 根据文档，响应格式应该是 { code: 200, message: "xxx", data: { url: "xxx" } }
-    if (responseData.code === 200) {
-      const url = responseData.data.url
-      console.log('上传成功，图片URL:', url)
-      imageUrl.value = url
-      ElMessage.success(responseData.message)
-      emit('success', responseData.data)
-    } else {
-      throw new Error(responseData.message || '上传失败')
-    }
+    // response已经是 { code: 200, message: "xxx", data: { url: "xxx" } } 格式
+    const url = response.data.url
+    console.log('上传成功，图片URL:', url)
+    imageUrl.value = url
+    ElMessage.success(response.message)
+    emit('success', response.data)
   } catch (error) {
     console.error('上传失败详细信息:', error)
     console.error('错误类型:', error.constructor.name)
