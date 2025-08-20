@@ -1,5 +1,5 @@
 <template>
-  <div class="image-upload">
+  <div class="image-upload" :data-height="height">
     <el-upload
       ref="uploadRef"
       :action="uploadAction"
@@ -68,6 +68,10 @@ const props = defineProps({
     default: '200px'
   },
   height: {
+    type: String,
+    default: '120px'
+  },
+  minHeight: {
     type: String,
     default: '120px'
   }
@@ -219,16 +223,42 @@ const handleRemove = async () => {
 <style scoped>
 .image-upload {
   width: v-bind(width);
-  height: v-bind(height);
+  min-height: v-bind(minHeight);
   position: relative;
 }
 
-.image-upload :deep(.el-upload) {
+.image-upload[data-height="auto"] {
+  height: auto;
+}
+
+.image-upload[data-height="auto"] :deep(.el-upload) {
+  width: 100%;
+  height: auto;
+  min-height: v-bind(minHeight);
+}
+
+.image-upload[data-height="auto"] :deep(.el-upload-dragger) {
+  width: 100%;
+  height: auto;
+  min-height: v-bind(minHeight);
+  border-radius: 6px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.image-upload:not([data-height="auto"]) {
+  height: v-bind(height);
+}
+
+.image-upload:not([data-height="auto"]) :deep(.el-upload) {
   width: 100%;
   height: 100%;
 }
 
-.image-upload :deep(.el-upload-dragger) {
+.image-upload:not([data-height="auto"]) :deep(.el-upload-dragger) {
   width: 100%;
   height: 100%;
   border-radius: 6px;
@@ -265,7 +295,8 @@ const handleRemove = async () => {
   margin-top: 4px !important;
 }
 
-.image-preview {
+/* 固定高度模式的图片预览 */
+.image-upload:not([data-height="auto"]) .image-preview {
   position: absolute;
   top: 0;
   left: 0;
@@ -276,10 +307,27 @@ const handleRemove = async () => {
   background: #f5f7fa;
 }
 
-.image-preview img {
+.image-upload:not([data-height="auto"]) .image-preview img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
+}
+
+/* 自动高度模式的图片预览 */
+.image-upload[data-height="auto"] .image-preview {
+  position: relative;
+  width: 100%;
+  border-radius: 6px;
+  background: #f5f7fa;
+  overflow: hidden;
+}
+
+.image-upload[data-height="auto"] .image-preview img {
+  width: 100%;
+  height: auto;
+  max-height: 300px;
+  object-fit: contain;
   display: block;
 }
 
