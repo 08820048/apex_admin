@@ -72,7 +72,7 @@
 </template>
 
 <script setup>
-import { ref, defineProps, defineEmits, watch } from 'vue'
+import { ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { UploadFilled, Loading, DocumentCopy, Delete } from '@element-plus/icons-vue'
 import { uploadApi } from '@/api/upload'
