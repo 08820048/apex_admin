@@ -105,9 +105,13 @@
               </el-form-item>
               
               <el-form-item label="封面图片">
-                <el-input
+                <ImageUpload
                   v-model="form.coverImage"
-                  placeholder="请输入封面图片URL"
+                  upload-type="cover"
+                  width="100%"
+                  height="160px"
+                  @success="handleCoverUploadSuccess"
+                  @error="handleCoverUploadError"
                 />
               </el-form-item>
               
@@ -137,6 +141,7 @@ import { articleApi } from '@/api/article'
 import { categoryApi } from '@/api/category'
 import { tagApi } from '@/api/tag'
 import MarkdownEditor from '@/components/MarkdownEditor.vue'
+import ImageUpload from '@/components/ImageUpload.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -263,7 +268,17 @@ const handlePublish = async () => {
   }
 }
 
+// 封面上传成功处理
+const handleCoverUploadSuccess = (data) => {
+  console.log('封面上传成功:', data)
+  ElMessage.success('封面上传成功')
+}
 
+// 封面上传失败处理
+const handleCoverUploadError = (error) => {
+  console.error('封面上传失败:', error)
+  ElMessage.error('封面上传失败')
+}
 
 onMounted(() => {
   loadCategories()
