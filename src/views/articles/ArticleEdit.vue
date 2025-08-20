@@ -105,13 +105,14 @@
               </el-form-item>
               
               <el-form-item label="封面图片">
-                <ImageUpload
+                <ImageUploadNew
                   v-model="form.coverImage"
                   upload-type="cover"
-                  width="100%"
-                  height="auto"
-                  @success="handleCoverUploadSuccess"
-                  @error="handleCoverUploadError"
+                  :max-size="5 * 1024 * 1024"
+                  :min-width="400"
+                  :min-height="200"
+                  @upload-success="handleCoverUploadSuccess"
+                  @upload-error="handleCoverUploadError"
                 />
               </el-form-item>
               
@@ -141,7 +142,7 @@ import { articleApi } from '@/api/article'
 import { categoryApi } from '@/api/category'
 import { tagApi } from '@/api/tag'
 import MarkdownEditor from '@/components/MarkdownEditor.vue'
-import ImageUpload from '@/components/ImageUpload.vue'
+import ImageUploadNew from '@/components/ImageUploadNew.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -271,13 +272,14 @@ const handlePublish = async () => {
 // 封面上传成功处理
 const handleCoverUploadSuccess = (data) => {
   console.log('封面上传成功:', data)
-  ElMessage.success('封面上传成功')
+  form.coverImage = data.url
+  ElMessage.success(`封面上传成功！原始大小: ${data.originalSize ? Math.round(data.originalSize / 1024) + 'KB' : '未知'}`)
 }
 
 // 封面上传失败处理
 const handleCoverUploadError = (error) => {
   console.error('封面上传失败:', error)
-  ElMessage.error('封面上传失败')
+  ElMessage.error(`封面上传失败: ${error.message || '未知错误'}`)
 }
 
 onMounted(() => {

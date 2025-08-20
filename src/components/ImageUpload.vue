@@ -124,81 +124,126 @@ const beforeUpload = (file) => {
   return false // 阻止默认上传
 }
 
+// 图片压缩函数
+const compressImage = (file, maxWidth = 1920, quality = 0.8) => {
+  return new Promise((resolve, reject) => {
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d')
+    const img = new Image()
+
+    img.onload = () => {
+      // 计算压缩后的尺寸
+      let { width, height } = img
+      if (width > maxWidth) {
+        height = (height * maxWidth) / width
+        width = maxWidth
+      }
+
+      canvas.width = width
+      canvas.height = height
+
+      // 绘制压缩后的图片
+      ctx.drawImage(img, 0, 0, width, height)
+
+      canvas.toBlob(resolve, 'image/jpeg', quality)
+    }
+
+    img.onerror = reject
+    img.src = URL.createObjectURL(file)
+  })
+}
+
+// 格式化文件大小
+const formatFileSize = (bytes) => {
+  if (bytes === 0) return '0 B'
+  const k = 1024
+  const sizes = ['B', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+}
+
+// 上传进度
+const uploadProgress = ref(0)
+
 // 自定义上传处理
 const handleCustomUpload = async (file) => {
   try {
-    console.log('=== 开始上传调试 ===')
-    console.log('文件信息:', {
-      name: file.name,
-      size: file.size,
-      type: file.type,
-      lastModified: file.lastModified
-    })
-    console.log('上传类型:', props.uploadType)
-    console.log('当前环境:', {
-      isDev: import.meta.env.DEV,
-      isProd: import.meta.env.PROD,
-      mode: import.meta.env.MODE,
-      baseUrl: import.meta.env.VITE_API_BASE_URL
-    })
-    console.log('当前域名:', window.location.hostname)
+    console.log('开始上传文件:', file.name, '大小:', formatFileSize(file.size))
+
+    // 重置进度
+    uploadProgress.value = 0
+
+    // 模拟进度更新
+    const progressInterval = setInterval(() => {
+      if (uploadProgress.value < 90) {
+        uploadProgress.value += Math.random() * 15
+      }
+    }, 300)
+
+    // 图片压缩（如果文件大于1MB）
+    let fileToUpload = file
+    if (file.size > 1024 * 1024) {
+      try {
+        console.log('文件较大，开始压缩...')
+        const compressedBlob = await compressImage(file, 1920, 0.8)
+        fileToUpload = new File([compressedBlob], file.name, {
+          type: 'image/jpeg',
+          lastModified: Date.now()
+        })
+        console.log(`压缩完成: ${formatFileSize(file.size)} → ${formatFileSize(fileToUpload.size)}`)
+      } catch (compressError) {
+        console.warn('压缩失败，使用原文件:', compressError)
+        fileToUpload = file
+      }
+    }
 
     let response
 
     // 根据上传类型选择对应的API
     switch (props.uploadType) {
       case 'cover':
-        console.log('调用 uploadApi.uploadCover')
-        response = await uploadApi.uploadCover(file)
+        response = await uploadApi.uploadCover(fileToUpload)
         break
       case 'avatar':
-        console.log('调用 uploadApi.uploadAvatar')
-        response = await uploadApi.uploadAvatar(file)
+        response = await uploadApi.uploadAvatar(fileToUpload)
         break
       case 'image':
-        console.log('调用 uploadApi.uploadImage')
-        response = await uploadApi.uploadImage(file)
+        response = await uploadApi.uploadImage(fileToUpload)
         break
       default:
         throw new Error('不支持的上传类型')
     }
 
-    console.log('=== 上传成功 ===')
-    console.log('响应数据:', response)
+    // 完成进度
+    clearInterval(progressInterval)
+    uploadProgress.value = 100
+
+    console.log('上传成功:', response)
 
     // response已经是 { code: 200, message: "xxx", data: { url: "xxx" } } 格式
     const url = response.data.url
-    console.log('图片URL:', url)
     imageUrl.value = url
-    ElMessage.success(response.message)
+    ElMessage.success(response.message || '上传成功')
     emit('success', response.data)
+
+    // 延迟重置进度
+    setTimeout(() => {
+      uploadProgress.value = 0
+    }, 1000)
+
   } catch (error) {
-    console.log('=== 上传失败 ===')
-    console.error('错误详细信息:', {
-      name: error.name,
-      message: error.message,
-      stack: error.stack,
-      config: error.config,
-      request: error.request,
-      response: error.response
-    })
+    console.error('上传失败:', error)
+    uploadProgress.value = 0
 
-    if (error.response) {
-      console.error('HTTP响应错误:', {
-        status: error.response.status,
-        statusText: error.response.statusText,
-        headers: error.response.headers,
-        data: error.response.data
-      })
+    let errorMessage = '上传失败，请重试'
+    if (error.message) {
+      errorMessage = error.message
+    } else if (error.response?.data?.message) {
+      errorMessage = error.response.data.message
     }
 
-    if (error.request) {
-      console.error('请求配置:', {
-        method: error.request.method,
-        url: error.request.responseURL || error.request.url,
-        headers: error.request.getAllResponseHeaders ? error.request.getAllResponseHeaders() : 'N/A'
-      })
-    }
+    ElMessage.error(errorMessage)
+    emit('error', error)
     console.error('错误堆栈:', error.stack)
 
     if (error.response) {
