@@ -6,8 +6,21 @@ export const useUserStore = defineStore('user', () => {
   const token = ref(localStorage.getItem('admin_token') || '')
   const userInfo = ref(null)
 
-  // 计算属性
-  const isLoggedIn = computed(() => !!token.value)
+  // 检查token是否有效
+  const isTokenValid = () => {
+    if (!token.value) return false
+
+    try {
+      const payload = JSON.parse(atob(token.value.split('.')[1]))
+      const expTime = payload.exp * 1000
+      return Date.now() < expTime
+    } catch {
+      return false
+    }
+  }
+
+  // 计算属性 - 检查是否真正登录（token存在且有效）
+  const isLoggedIn = computed(() => !!token.value && isTokenValid())
 
   // 登录
   const login = (loginData) => {
@@ -29,6 +42,13 @@ export const useUserStore = defineStore('user', () => {
 
   // 初始化用户信息
   const initUserInfo = () => {
+    // 首先检查token是否有效
+    if (!isTokenValid()) {
+      // token无效，清理所有数据
+      logout()
+      return
+    }
+
     const savedUser = localStorage.getItem('admin_user')
     if (savedUser) {
       try {
@@ -53,6 +73,7 @@ export const useUserStore = defineStore('user', () => {
     token,
     userInfo,
     isLoggedIn,
+    isTokenValid,
     login,
     logout,
     updateUserInfo

@@ -1,24 +1,24 @@
 <template>
-  <div class="article-edit">
-    <div class="page-header">
+  <div class="article-edit" v-loading="permissionChecking" element-loading-text="正在验证权限...">
+    <div v-if="!permissionChecking" class="page-header">
       <h1>{{ isEdit ? '编辑文章' : '新建文章' }}</h1>
       <div class="header-actions">
         <el-button @click="$router.back()">返回</el-button>
         <el-button type="primary" @click="handleSave" :loading="saving">
           保存
         </el-button>
-        <el-button 
+        <el-button
           v-if="!isEdit || form.status === 'DRAFT'"
-          type="success" 
-          @click="handlePublish" 
+          type="success"
+          @click="handlePublish"
           :loading="publishing"
         >
           发布
         </el-button>
       </div>
     </div>
-    
-    <div class="edit-container">
+
+    <div v-if="!permissionChecking" class="edit-container">
       <el-form
         ref="formRef"
         :model="form"
@@ -135,9 +135,10 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, onBeforeMount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { useUserStore } from '@/stores/user'
 import { articleApi } from '@/api/article'
 import { categoryApi } from '@/api/category'
 import { tagApi } from '@/api/tag'
@@ -146,10 +147,12 @@ import ImageUploadNew from '@/components/ImageUploadNew.vue'
 
 const route = useRoute()
 const router = useRouter()
+const userStore = useUserStore()
 
 const formRef = ref()
 const saving = ref(false)
 const publishing = ref(false)
+const permissionChecking = ref(true)
 const categories = ref([])
 const tags = ref([])
 
@@ -199,11 +202,16 @@ const loadTags = async () => {
 // 加载文章详情
 const loadArticle = async () => {
   if (!isEdit.value) return
-  
+
+  // 检查权限
+  if (!checkPermission()) {
+    return
+  }
+
   try {
     const response = await articleApi.getDetail(route.params.id)
     const article = response.data
-    
+
     Object.assign(form, {
       title: article.title,
       summary: article.summary || '',
@@ -216,19 +224,35 @@ const loadArticle = async () => {
     })
   } catch (error) {
     console.error('加载文章详情失败:', error)
-    ElMessage.error('加载文章详情失败')
-    router.back()
+
+    // 检查是否是权限错误
+    if (error.response?.status === 403) {
+      ElMessage.error('权限不足，无法访问此文章')
+      router.push('/articles')
+    } else if (error.response?.status === 401) {
+      ElMessage.error('登录已过期，请重新登录')
+      userStore.logout()
+      router.push('/login')
+    } else {
+      ElMessage.error('加载文章详情失败')
+      router.back()
+    }
   }
 }
 
 // 保存文章
 const handleSave = async () => {
   if (!formRef.value) return
-  
+
+  // 检查权限
+  if (!checkPermission()) {
+    return
+  }
+
   try {
     await formRef.value.validate()
     saving.value = true
-    
+
     if (isEdit.value) {
       await articleApi.update(route.params.id, form)
       ElMessage.success('文章更新成功')
@@ -239,6 +263,17 @@ const handleSave = async () => {
     }
   } catch (error) {
     console.error('保存文章失败:', error)
+
+    // 检查是否是权限错误
+    if (error.response?.status === 403) {
+      ElMessage.error('权限不足，无法保存文章')
+    } else if (error.response?.status === 401) {
+      ElMessage.error('登录已过期，请重新登录')
+      userStore.logout()
+      router.push('/login')
+    } else {
+      ElMessage.error('保存文章失败')
+    }
   } finally {
     saving.value = false
   }
@@ -247,6 +282,11 @@ const handleSave = async () => {
 // 发布文章
 const handlePublish = async () => {
   if (!formRef.value) return
+
+  // 检查权限
+  if (!checkPermission()) {
+    return
+  }
 
   try {
     await formRef.value.validate()
@@ -264,6 +304,17 @@ const handlePublish = async () => {
     router.push('/articles')
   } catch (error) {
     console.error('发布文章失败:', error)
+
+    // 检查是否是权限错误
+    if (error.response?.status === 403) {
+      ElMessage.error('权限不足，无法发布文章')
+    } else if (error.response?.status === 401) {
+      ElMessage.error('登录已过期，请重新登录')
+      userStore.logout()
+      router.push('/login')
+    } else {
+      ElMessage.error('发布文章失败')
+    }
   } finally {
     publishing.value = false
   }
@@ -282,10 +333,49 @@ const handleCoverUploadError = (error) => {
   ElMessage.error(`封面上传失败: ${error.message || '未知错误'}`)
 }
 
-onMounted(() => {
-  loadCategories()
-  loadTags()
-  loadArticle()
+// 权限检查
+const checkPermission = () => {
+  if (!userStore.isLoggedIn) {
+    ElMessage.error('请先登录')
+    router.push('/login')
+    return false
+  }
+
+  if (!userStore.isTokenValid()) {
+    ElMessage.error('登录已过期，请重新登录')
+    userStore.logout()
+    router.push('/login')
+    return false
+  }
+
+  return true
+}
+
+// 在组件挂载前检查权限
+onBeforeMount(() => {
+  if (!checkPermission()) {
+    permissionChecking.value = false
+    return
+  }
+})
+
+onMounted(async () => {
+  try {
+    // 再次检查权限（双重保险）
+    if (!checkPermission()) {
+      return
+    }
+
+    // 并行加载数据
+    await Promise.all([
+      loadCategories(),
+      loadTags(),
+      loadArticle()
+    ])
+  } finally {
+    // 无论成功还是失败，都要停止权限检查状态
+    permissionChecking.value = false
+  }
 })
 </script>
 
