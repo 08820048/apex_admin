@@ -33,7 +33,7 @@
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { authApi } from '@/api/auth'
+import { authOperations } from '@/api/auth'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -54,17 +54,11 @@ const handleCommand = async (command) => {
           type: 'warning'
         })
 
-        // 调用后端登出接口
-        try {
-          await authApi.logout()
-        } catch (error) {
-          console.warn('后端登出失败:', error)
-          // 即使后端登出失败，也要清除本地状态
-        }
-
-        userStore.logout()
-        router.push('/login')
-        ElMessage.success('退出登录成功')
+        // 使用安全的登出操作
+        authOperations.logoutSafely(() => {
+          // 登出完成后的回调
+          console.log('登出完成')
+        })
       } catch {
         // 用户取消
       }

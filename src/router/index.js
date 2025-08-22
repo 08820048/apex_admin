@@ -1,5 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useUserStore } from '@/stores/user'
+import { authUtils } from '@/api/auth'
+import { ElMessage } from 'element-plus'
 
 // 布局组件
 import Layout from '@/components/Layout.vue'
@@ -121,17 +123,43 @@ const router = createRouter({
   routes
 })
 
-// 路由守卫
+// 增强的路由守卫
 router.beforeEach((to, from, next) => {
   const userStore = useUserStore()
-  
-  if (to.meta.requiresAuth !== false && !userStore.isLoggedIn) {
-    next('/login')
-  } else if (to.path === '/login' && userStore.isLoggedIn) {
-    next('/dashboard')
-  } else {
-    next()
+
+  // 检查是否需要认证
+  if (to.meta.requiresAuth !== false) {
+    // 检查是否已登录
+    if (!userStore.isLoggedIn) {
+      ElMessage.error('请先登录')
+      next('/login')
+      return
+    }
+
+    // 检查token是否过期
+    if (authUtils.isTokenExpired()) {
+      ElMessage.error('登录已过期，请重新登录')
+      userStore.logout()
+      next('/login')
+      return
+    }
+
+    // 检查token是否即将过期（提醒用户）
+    if (authUtils.isTokenExpiringSoon()) {
+      ElMessage.warning({
+        message: `登录将在${authUtils.formatRemainingTime()}后过期，请及时保存数据`,
+        duration: 5000
+      })
+    }
   }
+
+  // 如果已登录用户访问登录页，重定向到仪表盘
+  if (to.path === '/login' && userStore.isLoggedIn && !authUtils.isTokenExpired()) {
+    next('/dashboard')
+    return
+  }
+
+  next()
 })
 
 export default router

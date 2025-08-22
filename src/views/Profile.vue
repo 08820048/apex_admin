@@ -4,7 +4,7 @@
       <h1>个人信息</h1>
     </div>
     
-    <div class="profile-container">
+    <div class="profile-container" v-loading="loading">
       <el-card class="profile-card">
         <template #header>
           <span>基本信息</span>
@@ -111,13 +111,15 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { useUserStore } from '@/stores/user'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { userOperations, passwordUtils } from '@/api/user'
 
 const userStore = useUserStore()
 const formRef = ref()
 const passwordFormRef = ref()
 const saving = ref(false)
 const changingPassword = ref(false)
+const loading = ref(false)
 
 const form = reactive({
   username: '',
@@ -149,7 +151,22 @@ const passwordRules = {
   ],
   newPassword: [
     { required: true, message: '请输入新密码', trigger: 'blur' },
-    { min: 6, message: '密码长度不能少于6位', trigger: 'blur' }
+    { min: 6, max: 50, message: '密码长度为6-50位', trigger: 'blur' },
+    {
+      validator: (rule, value, callback) => {
+        if (!value) {
+          callback()
+          return
+        }
+        const strengthCheck = passwordUtils.validatePasswordStrength(value)
+        if (!strengthCheck.isValid) {
+          callback(new Error(strengthCheck.messages[0] || '密码强度不足'))
+        } else {
+          callback()
+        }
+      },
+      trigger: 'blur'
+    }
   ],
   confirmPassword: [
     { required: true, message: '请再次输入新密码', trigger: 'blur' },
@@ -166,7 +183,34 @@ const passwordRules = {
   ]
 }
 
-// 初始化表单数据
+// 加载用户信息
+const loadUserProfile = async () => {
+  loading.value = true
+  try {
+    await userOperations.getUserProfileSafely(
+      (userData) => {
+        // 更新表单数据
+        Object.assign(form, {
+          username: userData.username || '',
+          nickname: userData.nickname || '',
+          email: userData.email || '',
+          bio: userData.bio || ''
+        })
+
+        // 更新用户store
+        userStore.updateUserInfo(userData)
+      },
+      (error) => {
+        console.error('获取用户信息失败:', error)
+        ElMessage.error('获取用户信息失败')
+      }
+    )
+  } finally {
+    loading.value = false
+  }
+}
+
+// 初始化表单数据（从本地存储）
 const initForm = () => {
   if (userStore.userInfo) {
     Object.assign(form, {
@@ -207,29 +251,40 @@ const handleReset = () => {
 // 修改密码
 const handleChangePassword = async () => {
   if (!passwordFormRef.value) return
-  
+
   try {
     await passwordFormRef.value.validate()
     changingPassword.value = true
-    
-    // 这里应该调用修改密码的API
-    ElMessage.success('密码修改成功')
-    
-    // 重置密码表单
-    passwordForm.currentPassword = ''
-    passwordForm.newPassword = ''
-    passwordForm.confirmPassword = ''
-    
+
+    // 使用安全的密码修改操作
+    await userOperations.changePasswordSafely(
+      passwordForm,
+      (response) => {
+        ElMessage.success('密码修改成功，即将跳转到登录页')
+
+        // 重置密码表单
+        passwordForm.currentPassword = ''
+        passwordForm.newPassword = ''
+        passwordForm.confirmPassword = ''
+        passwordFormRef.value?.resetFields()
+      },
+      (error) => {
+        console.error('修改密码失败:', error)
+        ElMessage.error(error.message || '修改密码失败，请重试')
+      }
+    )
+
   } catch (error) {
-    console.error('修改密码失败:', error)
-    ElMessage.error('修改密码失败，请重试')
+    console.error('表单验证失败:', error)
   } finally {
     changingPassword.value = false
   }
 }
 
 onMounted(() => {
+  // 先从本地存储初始化，然后从服务器加载最新数据
   initForm()
+  loadUserProfile()
 })
 </script>
 

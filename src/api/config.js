@@ -18,6 +18,27 @@ const getBaseURL = () => {
   return '/api'
 }
 
+// 检查token是否即将过期
+const isTokenExpiringSoon = () => {
+  const token = localStorage.getItem('admin_token')
+  if (!token) return true
+
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]))
+    const expTime = payload.exp * 1000
+    const now = Date.now()
+    return (expTime - now) < 5 * 60 * 1000 // 5分钟内过期
+  } catch {
+    return true
+  }
+}
+
+// 清除认证信息
+const clearAuth = () => {
+  localStorage.removeItem('admin_token')
+  localStorage.removeItem('admin_user')
+}
+
 // 创建axios实例
 const api = axios.create({
   baseURL: getBaseURL(),
@@ -27,7 +48,7 @@ const api = axios.create({
   }
 })
 
-// 请求拦截器 - 添加token
+// 请求拦截器 - 添加token和检查过期
 api.interceptors.request.use(
   config => {
     console.log('=== 请求拦截器 ===')
@@ -41,6 +62,12 @@ api.interceptors.request.use(
 
     const token = localStorage.getItem('admin_token')
     if (token) {
+      // 检查token是否即将过期
+      if (isTokenExpiringSoon()) {
+        console.warn('Token即将过期，建议重新登录')
+        ElMessage.warning('登录即将过期，请及时保存数据')
+      }
+
       config.headers.Authorization = `Bearer ${token}`
       console.log('已添加Authorization token')
     } else {
@@ -87,15 +114,19 @@ api.interceptors.response.use(
         case 401:
           // token过期或无效，跳转到登录页
           ElMessage.error('登录已过期，请重新登录')
-          localStorage.removeItem('admin_token')
-          localStorage.removeItem('admin_user')
+          clearAuth()
           window.location.href = '/login'
           break
         case 403:
-          ElMessage.error('权限不足')
+          // 权限不足，不要自动跳转登录页
+          ElMessage.error('权限不足，需要管理员权限')
           break
         case 404:
           ElMessage.error('请求的资源不存在')
+          break
+        case 429:
+          // 请求过于频繁
+          ElMessage.error('请求过于频繁，请稍后再试')
           break
         case 500:
           ElMessage.error('服务器内部错误')

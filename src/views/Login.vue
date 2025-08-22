@@ -55,7 +55,7 @@ import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { ElMessage } from 'element-plus'
 import { User, Lock } from '@element-plus/icons-vue'
-import { authApi } from '@/api/auth'
+import { authOperations } from '@/api/auth'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -85,32 +85,38 @@ const handleLogin = async () => {
     await loginFormRef.value.validate()
     loading.value = true
 
-    // 调用真实的登录接口
-    const response = await authApi.login({
-      username: loginForm.username,
-      password: loginForm.password
-    })
+    // 使用安全的登录操作
+    await authOperations.loginSafely(
+      {
+        username: loginForm.username,
+        password: loginForm.password
+      },
+      (userData) => {
+        // 登录成功，保存用户信息到store
+        const loginData = {
+          token: localStorage.getItem('admin_token'),
+          userInfo: {
+            id: userData.user?.id,
+            username: userData.user?.username,
+            email: userData.user?.email,
+            nickname: userData.user?.nickname,
+            bio: userData.user?.bio,
+            avatar: userData.user?.avatar,
+            role: 'admin'
+          }
+        }
 
-    // 登录成功，保存token和用户信息
-    const loginData = {
-      token: response.data.token,
-      userInfo: response.data.user || {
-        id: response.data.user?.id,
-        username: response.data.user?.username,
-        email: response.data.user?.email,
-        nickname: response.data.user?.nickname,
-        bio: response.data.user?.bio,
-        role: 'admin'
+        userStore.login(loginData)
+        router.push('/dashboard')
+      },
+      (error) => {
+        console.error('登录失败:', error)
+        // 错误消息已在authOperations中处理
       }
-    }
-
-    userStore.login(loginData)
-    ElMessage.success('登录成功')
-    router.push('/dashboard')
+    )
 
   } catch (error) {
-    console.error('登录失败:', error)
-    ElMessage.error(error.message || '登录失败，请检查用户名和密码')
+    console.error('表单验证失败:', error)
   } finally {
     loading.value = false
   }
